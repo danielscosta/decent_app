@@ -25,57 +25,30 @@ defmodule DecentApp do
               command not in ["NOTHING", "DUP", "POP", "+", "-", "COINS"],
        do: {:halt, -1}
 
-  defp process(command, {bal, res}) do
-    new_balance = %{bal | coins: bal.coins - 1}
+  defp process(command, {bal, res}) when is_integer(command),
+    do: {:cont, {%{bal | coins: bal.coins - 1}, res ++ [command]}}
 
-    res =
-      cond do
-        command === "NOTHING" ->
-          res
+  defp process("NOTHING", {bal, res}), do: {:cont, {%{bal | coins: bal.coins - 1}, res}}
 
-        true ->
-          cond do
-            command == "DUP" ->
-              res ++ [List.last(res)]
+  defp process("DUP", {bal, res}),
+    do: {:cont, {%{bal | coins: bal.coins - 1}, res ++ [List.last(res)]}}
 
-            true ->
-              if command == "POP" do
-                {_, res} = List.pop_at(res, length(res) - 1)
-                res
-              else
-                cond do
-                  command == "+" ->
-                    [first, second | rest] = Enum.reverse(res)
-                    Enum.reverse(rest) ++ [first + second]
+  defp process("POP", {bal, res}),
+    do: {:cont, {%{bal | coins: bal.coins - 1}, res |> List.pop_at(length(res) - 1) |> elem(1)}}
 
-                  command == "-" ->
-                    [first, second | rest] = Enum.reverse(res)
-                    Enum.reverse(rest) ++ [first - second]
+  defp process("+", {bal, res}) do
+    [first, second | rest] = Enum.reverse(res)
+    res = Enum.reverse(rest) ++ [first + second]
 
-                  is_integer(command) ->
-                    res ++ [command]
-
-                  command == "COINS" ->
-                    res
-                end
-              end
-          end
-      end
-
-    new_balance =
-      if command == "COINS" do
-        %{new_balance | coins: new_balance.coins + 6}
-      else
-        new_balance
-      end
-
-    new_balance =
-      if command == "+" do
-        %{new_balance | coins: new_balance.coins - 1}
-      else
-        new_balance
-      end
-
-    {:cont, {new_balance, res}}
+    {:cont, {%{bal | coins: bal.coins - 2}, res}}
   end
+
+  defp process("-", {bal, res}) do
+    [first, second | rest] = Enum.reverse(res)
+    res = Enum.reverse(rest) ++ [first - second]
+
+    {:cont, {%{bal | coins: bal.coins - 1}, res}}
+  end
+
+  defp process("COINS", {bal, res}), do: {:cont, {%{bal | coins: bal.coins + 5}, res}}
 end
