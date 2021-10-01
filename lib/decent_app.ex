@@ -2,12 +2,14 @@ defmodule DecentApp do
   alias DecentApp.Balance
 
   def call(%Balance{} = balance, commands) do
-    with {balance, result} <- Enum.reduce_while(commands, {balance, []}, &process/2) do
-      if balance.coins < 0 do
-        -1
-      else
+    commands
+    |> Enum.reduce_while({balance, []}, &process/2)
+    |> case do
+      {balance, result} when balance.coins > 0 ->
         {balance, result}
-      end
+
+      _ ->
+        -1
     end
   end
 
