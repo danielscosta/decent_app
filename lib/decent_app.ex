@@ -13,92 +13,69 @@ defmodule DecentApp do
     end
   end
 
+  defp process(command, {_bal, []}) when command in ["DUP", "POP", "+", "-"], do: {:halt, -1}
+
+  defp process(command, {_bal, [_elem]}) when command in ["+", "-"], do: {:halt, -1}
+
+  defp process(command, {_bal, _res}) when is_integer(command) and (command < 0 or command > 10),
+    do: {:halt, -1}
+
+  defp process(command, {_bal, _res})
+       when not is_integer(command) and
+              command not in ["NOTHING", "DUP", "POP", "+", "-", "COINS"],
+       do: {:halt, -1}
+
   defp process(command, {bal, res}) do
-    is_error =
+    new_balance = %{bal | coins: bal.coins - 1}
+
+    res =
       cond do
-        length(res) < 1 ->
-          if command == "DUP" || command == "POP" || command == "+" || command == "-" do
-            true
-          else
-            false
-          end
-
-        length(res) < 2 ->
-          if command == "+" || command == "-" do
-            true
-          else
-            false
-          end
-
-        is_integer(command) ->
-          if command < 0 || command > 10 do
-            true
-          else
-            false
-          end
-
-        command != "NOTHING" && command != "DUP" && command != "POP" && command != "+" &&
-          command != "-" && command != "COINS" && !is_integer(command) ->
-          true
+        command === "NOTHING" ->
+          res
 
         true ->
-          false
+          cond do
+            command == "DUP" ->
+              res ++ [List.last(res)]
+
+            true ->
+              if command == "POP" do
+                {_, res} = List.pop_at(res, length(res) - 1)
+                res
+              else
+                cond do
+                  command == "+" ->
+                    [first, second | rest] = Enum.reverse(res)
+                    Enum.reverse(rest) ++ [first + second]
+
+                  command == "-" ->
+                    [first, second | rest] = Enum.reverse(res)
+                    Enum.reverse(rest) ++ [first - second]
+
+                  is_integer(command) ->
+                    res ++ [command]
+
+                  command == "COINS" ->
+                    res
+                end
+              end
+          end
       end
 
-    if is_error do
-      {:halt, -1}
-    else
-      new_balance = %{bal | coins: bal.coins - 1}
+    new_balance =
+      if command == "COINS" do
+        %{new_balance | coins: new_balance.coins + 6}
+      else
+        new_balance
+      end
 
-      res =
-        cond do
-          command === "NOTHING" ->
-            res
+    new_balance =
+      if command == "+" do
+        %{new_balance | coins: new_balance.coins - 1}
+      else
+        new_balance
+      end
 
-          true ->
-            cond do
-              command == "DUP" ->
-                res ++ [List.last(res)]
-
-              true ->
-                if command == "POP" do
-                  {_, res} = List.pop_at(res, length(res) - 1)
-                  res
-                else
-                  cond do
-                    command == "+" ->
-                      [first, second | rest] = Enum.reverse(res)
-                      Enum.reverse(rest) ++ [first + second]
-
-                    command == "-" ->
-                      [first, second | rest] = Enum.reverse(res)
-                      Enum.reverse(rest) ++ [first - second]
-
-                    is_integer(command) ->
-                      res ++ [command]
-
-                    command == "COINS" ->
-                      res
-                  end
-                end
-            end
-        end
-
-      new_balance =
-        if command == "COINS" do
-          %{new_balance | coins: new_balance.coins + 6}
-        else
-          new_balance
-        end
-
-      new_balance =
-        if command == "+" do
-          %{new_balance | coins: new_balance.coins - 1}
-        else
-          new_balance
-        end
-
-      {:cont, {new_balance, res}}
-    end
+    {:cont, {new_balance, res}}
   end
 end
