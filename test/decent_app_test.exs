@@ -36,4 +36,26 @@ defmodule DecentAppTest do
       assert DecentApp.call(%Balance{coins: 10}, ["POP"]) == -1
     end
   end
+
+  describe "Multiple Feature" do
+    test "success" do
+      balance = %Balance{coins: 10}
+
+      {new_balance, result} = DecentApp.call(balance, [1, 2, 3, 5, "*"])
+
+      assert new_balance.coins == 5
+      assert [1, 30] == result
+
+      {new_balance, result} = DecentApp.call(balance, [1, 1, 2, 2, "*"])
+
+      assert new_balance.coins == 5
+      assert [1, 4] == result
+    end
+
+    test "failed" do
+      balance = %Balance{coins: 10}
+
+      assert DecentApp.call(balance, [1, 2, "*"]) == -1
+    end
+  end
 end

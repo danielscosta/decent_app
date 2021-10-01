@@ -17,12 +17,14 @@ defmodule DecentApp do
 
   defp process(command, {_bal, [_elem]}) when command in ["+", "-"], do: {:halt, -1}
 
+  defp process(command, {_bal, res}) when command in ["*"] and length(res) < 3, do: {:halt, -1}
+
   defp process(command, {_bal, _res}) when is_integer(command) and (command < 0 or command > 10),
     do: {:halt, -1}
 
   defp process(command, {_bal, _res})
        when not is_integer(command) and
-              command not in ["NOTHING", "DUP", "POP", "+", "-", "COINS"],
+              command not in ["NOTHING", "DUP", "POP", "+", "-", "COINS", "*"],
        do: {:halt, -1}
 
   defp process(command, {bal, res}) when is_integer(command),
@@ -46,6 +48,13 @@ defmodule DecentApp do
   defp process("-", {bal, res}) do
     [first, second | rest] = Enum.reverse(res)
     res = Enum.reverse(rest) ++ [first - second]
+
+    {:cont, {%{bal | coins: bal.coins - 1}, res}}
+  end
+
+  defp process("*", {bal, res}) do
+    [first, second, third | rest] = Enum.reverse(res)
+    res = Enum.reverse(rest) ++ [first * second * third]
 
     {:cont, {%{bal | coins: bal.coins - 1}, res}}
   end
