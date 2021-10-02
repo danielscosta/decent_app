@@ -43,12 +43,12 @@ defmodule DecentAppTest do
 
       {new_balance, result} = DecentApp.call(balance, [1, 2, 3, 5, "*"])
 
-      assert new_balance.coins == 5
+      assert new_balance.coins == 3
       assert [1, 30] == result
 
       {new_balance, result} = DecentApp.call(balance, [1, 1, 2, 2, "*"])
 
-      assert new_balance.coins == 5
+      assert new_balance.coins == 3
       assert [1, 4] == result
     end
 
@@ -56,6 +56,10 @@ defmodule DecentAppTest do
       balance = %Balance{coins: 10}
 
       assert DecentApp.call(balance, [1, 2, "*"]) == -1
+
+      balance = %Balance{coins: 2}
+
+      assert DecentApp.call(balance, [1, 1, 2, 2, "*"]) == -1
     end
   end
 end

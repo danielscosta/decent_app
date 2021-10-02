@@ -56,7 +56,7 @@ defmodule DecentApp do
     [first, second, third | rest] = Enum.reverse(res)
     res = Enum.reverse(rest) ++ [first * second * third]
 
-    {:cont, {%{bal | coins: bal.coins - 1}, res}}
+    {:cont, {%{bal | coins: bal.coins - 3}, res}}
   end
 
   defp process("COINS", {bal, res}), do: {:cont, {%{bal | coins: bal.coins + 5}, res}}
